@@ -7,6 +7,7 @@
 //
 
 #import "TweetsTableCell.h"
+#import "TweetsDetailUViewController.h"
 #import "UIImageView+AFNetworking.h"
 #import <NSDate+DateTools.h>
 
@@ -16,7 +17,6 @@
 @property (weak, nonatomic) IBOutlet UILabel *tweetTextLabelView;
 @property (weak, nonatomic) IBOutlet UILabel *userScreenNameLabelView;
 @property (weak, nonatomic) IBOutlet UILabel *createdAtLabelView;
-
 @end
 
 @implementation TweetsTableCell
@@ -24,6 +24,13 @@
 - (void)awakeFromNib {
     // Initialization code
     self.tweetTextLabelView.preferredMaxLayoutWidth = self.tweetTextLabelView.frame.size.width;
+    if (self.tweet.favoriteOn) {
+        [self.favoriteButton setImage:[UIImage imageNamed:@"favorite_on.png"] forState:nil];
+    }
+    
+    if (self.tweet.retweetOn) {
+        [self.retweetButton setImage:[UIImage imageNamed:@"retweet_on.png"] forState:nil];
+    }
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

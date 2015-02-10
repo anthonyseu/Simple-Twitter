@@ -79,7 +79,8 @@
     };
     
     void (^success)(AFHTTPRequestOperation *operation, Tweet *tweet) = ^(AFHTTPRequestOperation *operation, Tweet *tweet) {
-        self.tweet = tweet;
+        self.tweet.retweetOn = tweet.retweetOn;
+        self.tweet.retweetCount = tweet.retweetCount;
         self.retweetCountLabelView.text = [NSString stringWithFormat:@"%d", self.tweet.retweetCount];
         
         if (self.tweet.retweetOn) {
@@ -89,7 +90,7 @@
         }
         
         if (self.delegate) {
-            [self.delegate didRetweet:tweet];
+            [self.delegate didRetweet:self.tweet];
         }
     };
     

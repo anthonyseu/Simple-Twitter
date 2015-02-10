@@ -71,26 +71,89 @@
     }];
 }
 
+- (IBAction)onCellReplyButton:(UIButton *)sender {
+    Tweet *tweet = [self.tweetsArray objectAtIndex:sender.tag];
+    ComposeTweetViewController *vc = [[ComposeTweetViewController alloc] init];
+    vc.replyTo = tweet;
+    vc.delegate = self;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)onCellFavoriteButton:(UIButton *)sender {
+    Tweet *tweet = [self.tweetsArray objectAtIndex:sender.tag];
+    NSDictionary *params = @{@"id": tweet.idStr};
+    
+    void (^failure)(AFHTTPRequestOperation *operation, NSError *error) = ^(AFHTTPRequestOperation *operation, NSError *error) {
+        // TODO: show network error view
+    };
+    
+    void (^success)(AFHTTPRequestOperation *operation, Tweet *tweet) = ^(AFHTTPRequestOperation *operation, Tweet *tweet) {
+        if (tweet.favoriteOn) {
+            [sender setImage:[UIImage imageNamed:@"favorite_on.png"] forState:nil];
+        } else {
+            [sender setImage:[UIImage imageNamed:@"favorite.png"] forState:nil];
+        }
+        [self didFavoriteTweet:tweet];
+    };
+    
+    if (tweet.favoriteOn) {
+        [[TwitterClient sharedInstance] destroyFavoriteTweet:params success:success failure:failure];
+    } else {
+        [[TwitterClient sharedInstance] favoriteTweet:params success:success failure:failure];
+    }
+
+}
+
+- (IBAction)onCellRetweetButton:(UIButton *)sender {
+    Tweet *tweet = [self.tweetsArray objectAtIndex:sender.tag];
+    
+    NSDictionary *params = @{@"id": tweet.idStr};
+    
+    void (^failure)(AFHTTPRequestOperation *operation, NSError *error) = ^(AFHTTPRequestOperation *operation, NSError *error) {
+        // TODO: show network error view
+    };
+    
+    void (^success)(AFHTTPRequestOperation *operation, Tweet *tweet) = ^(AFHTTPRequestOperation *operation, Tweet *tweet) {
+        if (tweet.retweetOn) {
+            [sender setImage:[UIImage imageNamed:@"retweet_on.png"] forState:nil];
+        } else {
+            [sender setImage:[UIImage imageNamed:@"retweet.png"] forState:nil];
+        }
+        [self didRetweet:tweet];
+    };
+    
+    if (tweet.retweetOn) {
+        [[TwitterClient sharedInstance] undoRetweet:params success:success failure:failure];
+    } else {
+        [[TwitterClient sharedInstance] retweet:params success:success failure:failure];
+    }
+}
+
 - (void)didPostTweet:(Tweet *)tweet {
     [self.tweetsArray insertObject:tweet atIndex:0];
     [self.tweetsTableView reloadData];
 }
 
-- (void)didFavoriteTweet:(Tweet *)tweet {
-    [self replaceWithLatestTweet:tweet];
-}
-
-- (void)didRetweet:(Tweet *)tweet {
-    
-}
-
-- (void)replaceWithLatestTweet:(Tweet *)newTweet {
+- (void)didFavoriteTweet:(Tweet *)newTweet {
     for (NSUInteger i = 0; i <self.tweetsArray.count; i++) {
         Tweet *tweet = [self.tweetsArray objectAtIndex:i];
         if ([tweet.idStr isEqualToString:newTweet.idStr]) {
-            self.tweetsArray[i] = newTweet;
+            tweet.favoriteOn = newTweet.favoriteOn;
+            tweet.favoriteCount = newTweet.favoriteCount;
         }
     }
+    [self.tweetsTableView reloadData];
+}
+
+- (void)didRetweet:(Tweet *)newTweet {
+    for (NSUInteger i = 0; i <self.tweetsArray.count; i++) {
+        Tweet *tweet = [self.tweetsArray objectAtIndex:i];
+        if ([tweet.idStr isEqualToString:newTweet.idStr]) {
+            tweet.retweetOn = newTweet.retweetOn;
+            tweet.retweetCount = newTweet.retweetCount;
+        }
+    }
+    [self.tweetsTableView reloadData];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -101,6 +164,26 @@
     TweetsTableCell *cell = [tableView dequeueReusableCellWithIdentifier:@"TweetsTableCell"];
     Tweet *tweet = self.tweetsArray[indexPath.row];
     cell.tweet = tweet;
+
+    // cell buttons
+    cell.replyButton.tag = indexPath.row;
+    [cell.replyButton addTarget:self action:@selector(onCellReplyButton:) forControlEvents:UIControlEventTouchUpInside];
+    
+    cell.favoriteButton.tag = indexPath.row;
+    [cell.favoriteButton addTarget:self action:@selector(onCellFavoriteButton:) forControlEvents:UIControlEventTouchUpInside];
+    if (tweet.favoriteOn) {
+        [cell.favoriteButton setImage:[UIImage imageNamed:@"favorite_on.png"] forState:nil];
+    } else {
+        [cell.favoriteButton setImage:[UIImage imageNamed:@"favorite.png"] forState:nil];
+    }
+    
+    cell.retweetButton.tag = indexPath.row;
+    [cell.retweetButton addTarget:self action:@selector(onCellRetweetButton:) forControlEvents:UIControlEventTouchUpInside];
+    if (tweet.retweetOn) {
+        [cell.retweetButton setImage:[UIImage imageNamed:@"retweet_on.png"] forState:nil];
+    } else {
+        [cell.retweetButton setImage:[UIImage imageNamed:@"retweet.png"] forState:nil];
+    }
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return cell;
 }
