@@ -7,6 +7,11 @@
 //
 
 #import "AppDelegate.h"
+#import "TwitterClient.h"
+#import "User.h"
+#import "LoginViewController.h"
+#import "TweetsViewController.h"
+
 
 @interface AppDelegate ()
 
@@ -17,7 +22,32 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName : [UIColor whiteColor]}];
+    [[UINavigationBar appearance] setBarTintColor:[UIColor colorWithRed:0.33 green:0.67 blue:0.93 alpha:1]];
+    [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
+    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userDidLogout) name:UserDidLogoutNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userDidLogin) name:UserDidLoginNotification object:nil];
+    User *user = [User currentUser];
+    if (user != nil) {
+        UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:[[TweetsViewController alloc] init]];
+        self.window.rootViewController = nvc;
+    } else {
+        self.window.rootViewController = [[LoginViewController alloc] init];
+    }
+    [self.window makeKeyAndVisible];
     return YES;
+}
+
+- (void)userDidLogout {
+    self.window.rootViewController = [[LoginViewController alloc] init];
+}
+
+- (void)userDidLogin {
+    UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:[[TweetsViewController alloc] init]];
+    self.window.rootViewController = nvc;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -40,6 +70,11 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    [[TwitterClient sharedInstance] openURL:url];
+    return YES;
 }
 
 @end

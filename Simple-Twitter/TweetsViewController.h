@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  TweetsViewController.h
 //  Simple-Twitter
 //
 //  Created by Li Jiao on 2/7/15.
@@ -8,8 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
-
+@interface TweetsViewController : UIViewController <UITableViewDataSource, UITableViewDelegate>
 
 @end
-
